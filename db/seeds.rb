@@ -1,17 +1,14 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
 require 'open-uri'
 require 'json'
 
 puts "Nettoyage de la base..."
-Movie.destroy_all # Attention: efface tous les films existants
+Movie.destroy_all
+List.destroy_all
+
+puts "Création de listes de test..."
+List.create(name: "Action")
+List.create(name: "Comédies")
+List.create(name: "Science-Fiction")
 
 puts "Récupération des films depuis TMDB..."
 url = "https://tmdb.lewagon.com/movie/top_rated"
@@ -19,7 +16,7 @@ url = "https://tmdb.lewagon.com/movie/top_rated"
 begin
   data = JSON.parse(URI.open(url).read)
 
-  data['results'].first(20).each do |movie| # Limite à 20 films
+  data['results'].first(20).each do |movie|
     puts "Traitement de: #{movie['title']}"
 
     Movie.find_or_create_by(title: movie['title']) do |m|
@@ -32,5 +29,5 @@ begin
   puts "#{Movie.count} films créés avec succès!"
 rescue => e
   puts "Erreur: #{e.message}"
-  # Seed de secours ici...
+
 end

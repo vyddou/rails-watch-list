@@ -1,0 +1,26 @@
+<div class="container mt-5">
+  <h1><%= @list.name %></h1>
+
+  <!-- Formulaire d'ajout de bookmark -->
+  <%= simple_form_for [@list, @bookmark] do |f| %>
+    <%= f.association :movie, collection: Movie.all.order(:title), prompt: "Choisir un film" %>
+    <%= f.input :comment, placeholder: "Pourquoi j'aime ce film..." %>
+    <%= f.button :submit, "Ajouter", class: "btn btn-primary" %>
+  <% end %>
+
+  <!-- Liste des bookmarks existants -->
+  <% @list.bookmarks.each do |bookmark| %>
+    <div class="card my-3">
+      <div class="card-body">
+        <h5><%= bookmark.movie.title %></h5>
+        <p><%= bookmark.comment %></p>
+        <%= link_to "Supprimer", bookmark_path(bookmark),
+                    method: :delete,
+                    class: "btn btn-danger",
+                    data: { confirm: "Êtes-vous sûr ?" } %>
+      </div>
+    </div>
+  <% end %>
+
+  <%= link_to "Retour", lists_path, class: "btn btn-secondary" %>
+</div>
