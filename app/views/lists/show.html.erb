@@ -1,26 +1,76 @@
 <div class="container mt-5">
-  <h1><%= @list.name %></h1>
+  <h1 class="mb-4"><%= @list.name %></h1>
 
-  <!-- Formulaire d'ajout de bookmark -->
-  <%= simple_form_for [@list, @bookmark] do |f| %>
-    <%= f.association :movie, collection: Movie.all.order(:title), prompt: "Choisir un film" %>
-    <%= f.input :comment, placeholder: "Pourquoi j'aime ce film..." %>
-    <%= f.button :submit, "Ajouter", class: "btn btn-primary" %>
-  <% end %>
+  <!-- Formulaire d'ajout de film -->
+  <div class="mb-5 p-4 bg-light rounded">
+    <h3 class="mb-3">Ajouter un film à cette liste</h3>
+    <%= simple_form_for [@list, @bookmark], html: { class: 'bookmark-form' } do |f| %>
+      <%= f.association :movie, collection: Movie.all.order(:title), label: "Choisir un film" %>
 
-  <!-- Liste des bookmarks existants -->
-  <% @list.bookmarks.each do |bookmark| %>
-    <div class="card my-3">
-      <div class="card-body">
-        <h5><%= bookmark.movie.title %></h5>
-        <p><%= bookmark.comment %></p>
-        <%= link_to "Supprimer", bookmark_path(bookmark),
+      <%= f.input :comment,
+            label: "Commentaire",
+            placeholder: "Pourquoi j'aime ce film (min. 6 caractères)...",
+            input_html: {
+              class: (@bookmark.errors[:comment].any? ? 'is-invalid' : ''),
+              minlength: 6
+            } %>
+
+      <% if @bookmark.errors[:comment].any? %>
+        <div class="invalid-feedback d-block">
+          <%= @bookmark.errors[:comment].first %>
+        </div>
+      <% end %>
+
+      <%= f.button :submit, "Ajouter", class: "btn btn-primary" %>
+    <% end %>
+  </div>
+
+  <!-- Liste des films -->
+  <% if @list.bookmarks.any? %>
+    <h3 class="mb-3">Films dans cette liste (<%= @list.bookmarks.count %>)</h3>
+    <div class="row">
+      <% @list.bookmarks.each do |bookmark| %>
+        <% next unless bookmark.persisted? %> <!-- Ne montre que les bookmarks sauvegardés -->
+        <div class="col-12 col-sm-6 col-lg-4 mb-4">
+          <div class="card h-100 shadow-sm">
+            <!-- Affiche du film avec badge de note -->
+            <div class="position-relative">
+              <%= image_tag bookmark.movie.poster_url.presence || 'placeholder-movie.png',
+                   class: "card-img-top img-fluid",
+                   alt: bookmark.movie.title,
+                   style: "height: 400px; object-fit: cover;" %>
+              <div class="rating-badge <%= rating_color(bookmark.movie.rating) %>">
+                <%= number_with_precision(bookmark.movie.rating, precision: 1) %>
+                <small>/10</small>
+              </div>
+            </div>
+
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title"><%= bookmark.movie.title %></h5>
+              <p class="card-text flex-grow-1"><%= bookmark.comment %></p>
+
+              <div class="mt-auto">
+                <%= button_to "Supprimer", bookmark_path(bookmark),
                     method: :delete,
-                    class: "btn btn-danger",
-                    data: { confirm: "Êtes-vous sûr ?" } %>
-      </div>
+                    class: "btn btn-outline-danger btn-sm",
+                    form: {
+                      data: {
+                        turbo_confirm: "Êtes-vous sûr de vouloir retirer ce film de la liste ?"
+                      }
+                    } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="alert alert-info">
+      Cette liste ne contient aucun film pour le moment.
     </div>
   <% end %>
 
-  <%= link_to "Retour", lists_path, class: "btn btn-secondary" %>
+  <%= link_to lists_path, class: "btn btn-secondary mt-3" do %>
+    <i class="fas fa-arrow-left"></i> Retour aux listes
+  <% end %>
 </div>

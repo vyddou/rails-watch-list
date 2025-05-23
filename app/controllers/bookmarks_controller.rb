@@ -5,24 +5,26 @@ class BookmarksController < ApplicationController
     @movies = Movie.all.order(:title)
   end
 
-  def create
-    @list = List.find(params[:list_id])
-    @bookmark = @list.bookmarks.build(bookmark_params)
+def create
+  @list = List.find(params[:list_id])
+  @bookmark = @list.bookmarks.build(bookmark_params)
+  @movies = Movie.all.order(:title) # Nécessaire pour réafficher la liste déroulante
 
-    if @bookmark.save
-      redirect_to @list, notice: 'Film ajouté à la liste !'
-    else
-      @movies = Movie.all.order(:title)
-      render :new, status: :unprocessable_entity
-    end
+  if @bookmark.save
+    redirect_to @list, notice: 'Film ajouté avec succès!'
+  else
+    # On récupère les bookmarks existants pour la liste
+    @bookmarks = @list.bookmarks
+    render 'lists/show', status: :unprocessable_entity
   end
+end
 
-  def destroy
-    @bookmark = Bookmark.find(params[:id])
-    @list = @bookmark.list
-    @bookmark.destroy
-    redirect_to @list, notice: 'Bookmark supprimé', status: :see_other
-  end
+ def destroy
+  @bookmark = Bookmark.find(params[:id])
+  @list = @bookmark.list
+  @bookmark.destroy
+  redirect_to @list, notice: "Film retiré de la liste"
+end
 
   private
 
